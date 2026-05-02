@@ -1,5 +1,5 @@
 {
-  "name": "06-auth",
+  "name": "astro-auth",
   "type": "module",
   "version": "0.0.1",
   "engines": {
@@ -12,6 +12,12 @@
     "astro": "astro"
   },
   "dependencies": {
-    "astro": "^6.1.9"
+    "@astrojs/netlify": "^7.0.8",
+    "@tailwindcss/vite": "^4.2.4",
+    "astro": "^6.1.9",
+    "tailwindcss": "^4.2.4"
+  },
+  "devDependencies": {
+    "prettier-plugin-astro": "^0.14.1"
   }
 }
