@@ -2,13 +2,17 @@
 
 declare namespace App {
   interface Locals {
-    // TODO: Extender con datos del usuario cuando se implemente Astro.locals
+    user: import('better-auth').User | null;
+    session: import('better-auth').Session | null;
   }
 }
 
 interface ImportMetaEnv {
-  readonly AUTH_USER: string;
-  readonly AUTH_PASS: string;
+  readonly BETTER_AUTH_URL: string;
+  readonly BETTER_AUTH_SECRET: string;
+  readonly TURSO_DATABASE_URL: string;
+  readonly TURSO_AUTH_TOKEN: string;
+  readonly RESEND_APIKEY: string;
 }
 
 interface ImportMeta {

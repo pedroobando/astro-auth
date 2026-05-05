@@ -13,10 +13,13 @@ const rememberme = !!email;
         <h3 class="font-semibold text-2xl text-gray-800">Login</h3>
         <p class="text-gray-500">Por favor ingresa tus datos.</p>
       </div>
-      <div class="space-y-5">
+      <form id="login-form" class="space-y-5">
+        <div id="error-message" class="hidden text-red-600 text-sm bg-red-50 border border-red-200 rounded-lg p-3">
+        </div>
         <div class="space-y-2">
           <label class="text-sm font-medium text-gray-700 tracking-wide">Email</label>
           <input
+            name="email"
             class="w-full text-base px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-green-400"
             type="email"
             value={email}
@@ -26,6 +29,7 @@ const rememberme = !!email;
         <div class="space-y-2">
           <label class="mb-5 text-sm font-medium text-gray-700 tracking-wide"> Password </label>
           <input
+            name="password"
             class="w-full content-center text-base px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-green-400"
             type="password"
             placeholder="Enter your password"
@@ -48,13 +52,14 @@ const rememberme = !!email;
         </div>
         <div>
           <button
+            id="btn-submit"
             type="submit"
-            class="w-full flex justify-center bg-green-400 hover:bg-green-500 text-gray-100 p-3 rounded-full tracking-wide font-semibold shadow-lg cursor-pointer transition ease-in duration-500"
+            class="disabled:bg-gray-300 w-full flex justify-center bg-green-400 hover:bg-green-500 text-gray-100 p-3 rounded-full tracking-wide font-semibold shadow-lg cursor-pointer transition ease-in duration-500"
           >
             Sign in
           </button>
         </div>
-      </div>
+      </form>
       <div class="pt-5 text-center text-gray-400 text-xs">
         <span>
           Copyright © 2021- {new Date().getFullYear()}
@@ -70,3 +75,39 @@ const rememberme = !!email;
     </div>
   </AuthLayout>
 </MainLayout>
+
+<script>
+  import { authClient } from '@/lib/auth-client';
+
+  const form = document.querySelector('#login-form') as HTMLFormElement;
+  const btnSubmit = document.querySelector('#btn-submit') as HTMLButtonElement;
+  const errorMessage = document.querySelector('#error-message') as HTMLDivElement;
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    btnSubmit.setAttribute('disabled', 'disabled');
+    errorMessage.classList.add('hidden');
+    errorMessage.textContent = '';
+
+    const formData = new FormData(form);
+    const email = formData.get('email') as string;
+    const password = formData.get('password') as string;
+    const rememberMe = formData.get('remember_me') === 'on';
+
+    const { data, error } = await authClient.signIn.email({
+      email,
+      password,
+      rememberMe,
+    });
+
+    if (error) {
+      errorMessage.textContent = error.message || 'Error al iniciar sesión';
+      errorMessage.classList.remove('hidden');
+    } else {
+      // Éxito: redirigir a la página protegida o al home
+      window.location.href = '/protected';
+    }
+
+    btnSubmit.removeAttribute('disabled');
+  });
+</script>

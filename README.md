@@ -16,11 +16,17 @@ Proyecto de Astro.js con autenticación básica mediante middleware. Implementa 
 /
 ├── public/
 ├── src/
+│   ├── layaouts/
+│   │   ├── MainLayout.astro    # Layout principal (HTML/head)
+│   │   ├── ContentLayout.astro # Layout de contenido (estilos/márgenes)
+│   │   └── AuthLayout.astro    # Layout para páginas de autenticación
 │   ├── middleware/
-│   │   └── index.ts          # Middleware de autenticación
-│   └── pages/
-│       ├── index.astro       # Página pública
-│       └── protected.astro   # Ruta protegida
+│   │   └── index.ts            # Middleware de autenticación (Basic Auth)
+│   ├── pages/
+│   │   ├── index.astro         # Página pública
+│   │   └── protected.astro     # Ruta protegida
+│   └── env.d.ts                # Tipado de Astro.locals y variables de entorno
+├── .env                          # Credenciales (NO commitear)
 ├── package.json
 └── README.md
 ```
@@ -29,13 +35,16 @@ Proyecto de Astro.js con autenticación básica mediante middleware. Implementa 
 
 El proyecto utiliza un middleware (`src/middleware/index.ts`) que intercepta todas las solicitudes. Si la ruta está en la lista de `privateRoutes`, exige autenticación **Basic Auth**.
 
-### Credenciales por defecto
+### Variables de Entorno
 
-| Usuario | Contraseña |
-| :------ | :--------- |
-| `admin` | `admin`    |
+Las credenciales se configuran mediante variables de entorno en el archivo `.env`:
 
-> ⚠️ **IMPORTANTE**: En producción, las credenciales deben configurarse mediante variables de entorno. Ver sección [TODOs](#-todos).
+```env
+AUTH_USER=admin
+AUTH_PASS=admin
+```
+
+> ⚠️ **IMPORTANTE**: El archivo `.env` **NO debe commitearse**. En producción, configura estas variables en tu plataforma de deploy.
 
 ### Cómo funciona
 
@@ -58,8 +67,8 @@ Todos los comandos se ejecutan desde la raíz del proyecto:
 
 ## 📝 TODOs
 
-- [ ] Mover credenciales a variables de entorno (`import.meta.env.AUTH_USER`, `import.meta.env.AUTH_PASS`).
-- [ ] Tipar `Astro.locals` para compartir datos del usuario logueado en las páginas.
+- [x] Mover credenciales a variables de entorno (`import.meta.env.AUTH_USER`, `import.meta.env.AUTH_PASS`).
+- [ ] Extender `Astro.locals` con datos reales del usuario logueado y consumirlos en las páginas.
 - [ ] Implementar logout (el navegador cachea las credenciales de Basic Auth).
 
 ## 👀 Want to learn more?

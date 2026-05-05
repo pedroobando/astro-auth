@@ -1,52 +1,35 @@
 import { defineMiddleware } from 'astro:middleware';
+import { auth } from '@/lib/auth';
 
 const privateRoutes = ['/protected'];
 
-/**
- * Valida las credenciales de Basic Auth contra las variables de entorno.
- * Retorna true si el usuario está autorizado.
- */
-const isAuthorized = (request: Request): boolean => {
-  const authHeader = request.headers.get('authorization');
-
-  if (!authHeader || !authHeader.startsWith('Basic ')) {
-    return false;
-  }
-
-  // Decodificamos base64: "Basic dXNlcjpwYXNz" -> "user:pass"
-  const base64Credentials = authHeader.split(' ').at(-1) ?? '';
-  const credentials = atob(base64Credentials);
-  const [username, password] = credentials.split(':');
-
-  const validUser = import.meta.env.AUTH_USER;
-  const validPass = import.meta.env.AUTH_PASS;
-
-  return username === validUser && password === validPass;
-};
-
-/**
- * Retorna una Response 401 para solicitar autenticación Basic.
- */
-const requestAuthentication = (): Response => {
-  return new Response('Authentication required', {
-    status: 401,
-    headers: {
-      'WWW-Authenticate': 'Basic realm="Secure Area"',
-    },
+export const onRequest = defineMiddleware(async ({ url, request, locals }, next) => {
+  // 1. Obtener la sesión actual desde la cookie
+  const session = await auth.api.getSession({
+    headers: request.headers,
   });
-};
 
-export const onRequest = defineMiddleware(({ url, request }, next) => {
-  // 1. ¿Es una ruta protegida?
-  if (!privateRoutes.includes(url.pathname)) {
+  // 2. Inyectar datos del usuario en Astro.locals para las páginas
+  locals.user = session?.user ?? null;
+  locals.session = session?.session ?? null;
+
+  // 3. ¿Es una ruta protegida?
+  const isPrivate = privateRoutes.some((route) => url.pathname.startsWith(route));
+
+  if (!isPrivate) {
     return next();
   }
 
-  // 2. ¿Está autorizado?
-  if (isAuthorized(request)) {
-    return next();
+  // 4. Ruta protegida sin sesión → redirigir al login
+  if (!session) {
+    return new Response(null, {
+      status: 302,
+      headers: {
+        Location: '/login',
+      },
+    });
   }
 
-  // 3. No autorizado: pedir credenciales
-  return requestAuthentication();
+  // 5. Autorizado: continuar
+  return next();
 });

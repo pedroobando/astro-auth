@@ -8,9 +8,9 @@
 
 ## 📚 Contexto
 
-Proyecto de autenticación con middleware en Astro. Ejercicio práctico de Basic Auth.
+Proyecto de autenticación completa en Astro. Migrado de Basic Auth a **better-auth** con Drizzle ORM, Turso (libSQL) y Resend para emails de verificación.
 
-**Stack**: Astro (latest), TypeScript (stricto), Bun/Node. Sin librerías externas.
+**Stack**: Astro (latest), TypeScript (stricto), Bun/Node, better-auth, Drizzle ORM, Turso, Resend, TailwindCSS.
 
 ---
 
@@ -18,22 +18,53 @@ Proyecto de autenticación con middleware en Astro. Ejercicio práctico de Basic
 
 ```text
 src/
+├── actions/
+│   ├── auth/
+│   │   ├── index.ts              # Exporta acciones de auth
+│   │   └── register-user.action.ts # Acción de registro con better-auth
+│   └── index.ts                  # Exporta server actions
+├── db/
+│   ├── schema/
+│   │   ├── index.ts              # Re-exporta tablas
+│   │   ├── schema.ts             # Tablas del proyecto (posts)
+│   │   └── user.schema.ts        # Tablas de better-auth (user, session, account, verification)
+│   ├── index.ts                  # Conexión Drizzle + Turso
+│   └── seed.ts                   # Seed de datos de prueba
+├── lib/
+│   ├── auth.ts                   # Configuración de better-auth
+│   └── auth-client.ts            # Cliente de better-auth para el browser
 ├── middleware/
-│   └── index.ts          # Middleware implementado (Basic Auth, ver detalles abajo)
+│   └── index.ts                  # Middleware de sesión con better-auth
 ├── pages/
-│   ├── index.astro       # Pública
-│   └── protected.astro   # Protegida
-├── env.d.ts              # ✅ EXISTE (tipa App.Locals y env vars)
+│   ├── api/auth/
+│   │   └── [...all].ts           # Endpoint catch-all de better-auth
+│   ├── index.astro               # Página pública
+│   ├── login.astro               # Login funcional con better-auth
+│   ├── protected.astro           # Ruta protegida (requiere sesión)
+│   └── registry.astro            # Registro funcional con better-auth
+├── utils/
+│   └── send-mail-user.ts         # Utilidad para enviar emails con Resend
+├── env.d.ts                      # Tipa App.Locals y env vars
 └── ...
 ```
 
 | Archivo                     | Estado          | Nota                                                |
 | --------------------------- | --------------- | --------------------------------------------------- |
-| `src/middleware/index.ts`   | ✅ Implementado | Ver sección "Middleware" abajo                      |
+| `src/middleware/index.ts`   | ✅ Implementado | Sesión con better-auth, inyecta `user` en `locals`  |
 | `src/pages/index.astro`     | ✅ Existe       | Pública                                             |
-| `src/pages/protected.astro` | ✅ Existe       | Requiere Basic Auth                                 |
-| `src/env.d.ts`              | ✅ Existe       | Tipa `App.Locals` y `import.meta.env`               |
-| `.env`                      | ✅ Existe       | Credenciales `AUTH_USER`, `AUTH_PASS`. NO commitear |
+| `src/pages/login.astro`     | ✅ Funcional    | Usa `authClient.signIn.email()`                     |
+| `src/pages/registry.astro`  | ✅ Funcional    | Usa `actions.registerUser` → better-auth            |
+| `src/pages/protected.astro` | ✅ Existe       | Requiere sesión activa (redirige a `/login`)        |
+| `src/pages/api/auth/[...all].ts` | ✅ Existe  | Handler catch-all de better-auth                    |
+| `src/lib/auth.ts`           | ✅ Configurado  | Drizzle adapter, email verification con Resend      |
+| `src/lib/auth-client.ts`    | ✅ Configurado  | Con `baseURL` desde env                             |
+| `src/actions/auth/register-user.action.ts` | ✅ Funcional | Crea usuario real en DB                      |
+| `src/db/schema/`            | ✅ Definido     | Tablas de better-auth + tabla `posts`               |
+| `src/db/seed.ts`            | ✅ Funcional    | Seed de tabla `posts`                               |
+| `src/utils/send-mail-user.ts` | ✅ Configurado | Envía emails de verificación con Resend            |
+| `src/env.d.ts`              | ✅ Actualizado  | Tipa `App.Locals` con `User`/`Session` de better-auth |
+| `.env`                      | ✅ Existe       | Variables para better-auth, Turso y Resend. NO commitear |
+| `src/layaouts/`             | ✅ Existen      | MainLayout, ContentLayout, AuthLayout               |
 
 ---
 
@@ -42,28 +73,39 @@ src/
 **Ya implementado**. Características:
 
 - Rutas protegidas: `['/protected']`.
-- Mecanismo: Basic Auth via header `Authorization`.
-- **Credenciales**: Leídas desde `import.meta.env.AUTH_USER` y `import.meta.env.AUTH_PASS` (variables de entorno).
-- **Funciones privadas**:
-  - `isAuthorized(request: Request): boolean` → Valida credenciales. Retorna `boolean`. **NO recibe `next`**.
-  - `requestAuthentication(): Response` → Retorna 401 con `WWW-Authenticate`.
-- `onRequest` es el **orquestador**: decide si la ruta es privada → si está autorizado → si pide auth.
+- Mecanismo: Validación de sesión con **better-auth** via `auth.api.getSession()`.
+- **Inyección en `Astro.locals`**: `user` y `session` del usuario logueado disponibles en todas las páginas.
+- `onRequest` es el **orquestador**: obtiene sesión → inyecta en locals → si ruta protegida sin sesión → redirige a `/login`.
 
 ### Decisiones Arquitectónicas (NO CAMBIAR)
 
-1. **NO pasar `next` a helpers**: `isAuthorized` devuelve `boolean`. El orquestador decide el flujo. Desacopla lógica del framework.
-2. **Arrow functions** para helpers privados.
-3. **`.at(-1)`** para extraer el token base64 del header.
-4. **Respuesta 401 extraída** en función separada.
+1. **Obtener sesión primero**: Siempre llamar `auth.api.getSession()` antes de decidir el flujo.
+2. **Inyectar en `locals` siempre**: Tanto rutas públicas como protegidas deben tener acceso a `locals.user`.
+3. **Redirección 302 para rutas protegidas**: En vez de 401, redirigir al login (mejor UX que Basic Auth).
 
 ---
 
 ## 📋 Convenciones (OBLIGATORIAS)
 
-- **Middleware**: Usar `defineMiddleware`. `onRequest` es orquestador. Helpers devuelven `boolean`, no reciben `next`.
+- **Middleware**: Usar `defineMiddleware`. `onRequest` es orquestador.
 - **Seguridad**: NUNCA hardcodear credenciales. Leer siempre desde `import.meta.env`. No commitear `.env`.
-- **TypeScript**: Estricto. `atob` nativo. Preferir `.at(-1)` sobre `[index]`.
+- **TypeScript**: Estricto. Preferir `.at(-1)` sobre `[index]`.
 - **Arquitectura**: SRP. Validación → función pura. Respuestas → función separada. Orquestación → `onRequest`.
+- **better-auth**: Usar `auth.api.*` en el servidor, `authClient.*` en el browser. Nunca mezclar.
+
+---
+
+## 📋 Estado de TODOs
+
+| TODO | Estado | Detalle |
+|------|--------|---------|
+| Variables de entorno para credenciales | ✅ Completado | Credenciales movidas a `.env` (`AUTH_USER`, `AUTH_PASS`). Middleware actualizado. |
+| Extender `Astro.locals` con datos del usuario | ✅ Completado | `env.d.ts` tipado con `User`/`Session` de better-auth. Middleware inyecta datos reales. |
+| Implementar logout | ✅ Completado | Botón en `protected.astro` con `authClient.signOut()` y redirección a `/login`. |
+| Email de verificación | ✅ Configurado | Resend envía emails al registrarse (`sendOnSignUp: true`). |
+| Seed de datos de prueba | ✅ Completado | Seed usa tabla `posts` del schema del proyecto. |
+
+> Si se completa un TODO, **actualizar esta tabla inmediatamente**.
 
 ---
 
