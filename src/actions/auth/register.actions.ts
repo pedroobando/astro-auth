@@ -12,8 +12,19 @@ export const registerUser = defineAction({
   }),
 
   // La lógica del servidor
-  handler: async ({ name, email, password, remember_me }): Promise<boolean> => {
-    console.log({ name, email, password, remember_me });
-    return true;
+  handler: async ({ name, email, password, remember_me }, { cookies }): Promise<{ ok: boolean; message: string }> => {
+    if (remember_me) {
+      cookies.set('email', email, {
+        expires: new Date(Date.now() + 1000 * 60 * 60 * 24 * 365),
+        path: '/',
+      });
+    } else {
+      cookies.delete('email', {
+        path: '/',
+      });
+    }
+    // console.log({ name, email, password, remember_me });
+
+    return { ok: true, message: 'Usuario creado' };
   },
 });

@@ -1,4 +1,4 @@
-# AGENTS.md — 06-auth (Astro Course)
+# AGENTS.md — astro-auth (Astro Course)
 
 > ⚠️ **INSTRUCCIÓN PARA EL AGENTE**: ANTES de leer cualquier otro archivo, leé esto completo. Contiene el estado actual, decisiones tomadas y pendientes.
 >
@@ -64,16 +64,6 @@ src/
 - **Seguridad**: NUNCA hardcodear credenciales. Leer siempre desde `import.meta.env`. No commitear `.env`.
 - **TypeScript**: Estricto. `atob` nativo. Preferir `.at(-1)` sobre `[index]`.
 - **Arquitectura**: SRP. Validación → función pura. Respuestas → función separada. Orquestación → `onRequest`.
-
----
-
-## ✅ Checklist para Cambios
-
-- [ ] ¿Se mantiene SRP en el middleware?
-- [x] ¿Las credenciales están fuera del código?
-- [ ] ¿Se usa `defineMiddleware`?
-- [ ] ¿Se retorna `Response` desde `onRequest`?
-- [ ] ¿Se tipó `Astro.locals` si se agregan datos?
 
 ---
 
