@@ -7,7 +7,7 @@ export const posts = sqliteTable('posts', {
   id: text('id')
     .primaryKey()
     .$defaultFn(() => randomUUID()),
-  userId: text('id').notNull(),
+  userId: text('user_id').notNull(),
   name: text('name').notNull(),
   context: text('context').notNull(),
   isActive: integer('is_active', { mode: 'boolean' }).default(true),

@@ -1,5 +1,68 @@
 {
   "$schema": "https://opencode.ai/config.json",
+  "model": "opencode-go/deepseek-v4-pro",
+  "small_model": "opencode-go/qwen3.5-plus",
+  "default_agent": "gentleman",
+  "agent": {
+    "coder": {
+      "description": "Escribe código de alta calidad con DeepSeek V4 Pro",
+      "mode": "subagent",
+      "hidden": true,
+      "model": "opencode-go/deepseek-v4-pro",
+      "prompt": "Sos un desarrollador senior especializado en TypeScript, Astro, React, Drizzle ORM y arquitectura limpia. Escribí código conciso, tipado estrictamente, siguiendo principios SOLID. Preferí composición sobre herencia. Usá patrones funcionales cuando sea posible. Nunca omitas tipos, siempre usá interfaces explícitas.",
+      "tools": {
+        "edit": true,
+        "write": true,
+        "read": true,
+        "bash": true
+      }
+    },
+    "analyst": {
+      "description": "Analiza problemas complejos con Kimi K2.6 — SOLO razona, NO escribe código",
+      "mode": "subagent",
+      "hidden": true,
+      "model": "opencode-go/kimi-k2.6",
+      "prompt": "Sos un arquitecto de software senior con 15+ años de experiencia. Antes de proponer código, analizá el problema en profundidad, identificá edge cases, evaluá tradeoffs técnicos, y planteá una solución estructurada paso a paso. No escribas código hasta que el usuario te lo pida explícitamente. Explicá el POR QUÉ de cada decisión arquitectónica.",
+      "tools": {
+        "write": false,
+        "edit": false,
+        "read": true,
+        "bash": true
+      }
+    },
+    "reviewer": {
+      "description": "Revisa código buscando bugs con Kimi K2.6 — SOLO revisa, NO modifica",
+      "mode": "subagent",
+      "hidden": true,
+      "model": "opencode-go/kimi-k2.6",
+      "prompt": "Sos un code reviewer senior. Revisá el código enfocándote en: seguridad, performance, mantenibilidad, y principios SOLID. Detectá edge cases, race conditions, memory leaks, y problemas de tipado. Proponé mejoras concretas, no solo critiques.",
+      "tools": {
+        "write": false,
+        "edit": false,
+        "read": true
+      }
+    }
+  },
+  "command": {
+    "plan": {
+      "template": "Analizá el siguiente problema y proponé una solución arquitectónica detallada antes de escribir código. Descomponé el problema, evaluá tradeoffs, y definí los pasos de implementación:\n\n$ARGUMENTS",
+      "description": "Analiza y planifica con Kimi K2.6",
+      "agent": "analyst",
+      "model": "opencode-go/kimi-k2.6"
+    },
+    "code": {
+      "template": "Implementá la siguiente funcionalidad siguiendo las mejores prácticas de TypeScript, Astro y arquitectura limpia:\n\n$ARGUMENTS",
+      "description": "Implementa código con DeepSeek V4 Pro",
+      "agent": "coder",
+      "model": "opencode-go/deepseek-v4-pro"
+    },
+    "review": {
+      "template": "Revisá el siguiente código en busca de bugs, problemas de seguridad, y mejoras de arquitectura:\n\n$ARGUMENTS",
+      "description": "Revisa código con Kimi K2.6",
+      "agent": "reviewer",
+      "model": "opencode-go/kimi-k2.6"
+    }
+  },
   "mcp": {
     "Astro docs": {
       "type": "remote",

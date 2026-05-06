@@ -1,6 +1,6 @@
 ---
-import ContentLayout from '@/layaouts/ContentLayout.astro';
-import MainLayout from '@/layaouts/MainLayout.astro';
+import ContentLayout from '@/layouts/ContentLayout.astro';
+import MainLayout from '@/layouts/MainLayout.astro';
 
 const user = Astro.locals.user;
 ---
@@ -118,21 +118,18 @@ const user = Astro.locals.user;
   const btnLogout = document.querySelector('#btn-logout') as HTMLButtonElement;
 
   btnLogout.addEventListener('click', async () => {
+    const originalHTML = btnLogout.innerHTML;
+
     btnLogout.setAttribute('disabled', 'disabled');
-    btnLogout.textContent = 'Cerrando sesión...';
+    btnLogout.innerHTML = 'Cerrando sesión...';
 
     try {
       await authClient.signOut();
       window.location.href = '/login';
     } catch (err) {
       console.error('Error al cerrar sesión:', err);
+      btnLogout.innerHTML = originalHTML;
       btnLogout.removeAttribute('disabled');
-      btnLogout.innerHTML = `
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-        </svg>
-        Cerrar sesión
-      `;
     }
   });
 </script>

@@ -1,8 +1,11 @@
 ---
-import AuthLayout from '@/layaouts/AuthLayout.astro';
-import MainLayout from '@/layaouts/MainLayout.astro';
-const email = Astro.cookies.get('email')?.value ?? '';
-const rememberme = !!email;
+import AuthLayout from '@/layouts/AuthLayout.astro';
+import MainLayout from '@/layouts/MainLayout.astro';
+
+if (Astro.locals.session) {
+  return Astro.redirect('/protected');
+}
+
 ---
 
 <MainLayout title="Auth - Login">
@@ -31,7 +34,7 @@ const rememberme = !!email;
             name="email"
             class="w-full text-base px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-green-400"
             type="email"
-            value={email}
+
             placeholder="mail@gmail.com"
           />
         </div>
@@ -44,18 +47,7 @@ const rememberme = !!email;
             placeholder="Enter your password"
           />
         </div>
-        <div class="flex items-center justify-between">
-          <div class="flex items-center">
-            <input
-              id="remember_me"
-              name="remember_me"
-              type="checkbox"
-              value="true"
-              checked={rememberme}
-              class="h-4 w-4 bg-blue-500 focus:ring-blue-400 border-gray-300 rounded"
-            />
-            <label for="remember_me" class="ml-2 block text-sm text-gray-800"> Recuerda me </label>
-          </div>
+        <div class="flex items-center justify-end">
           <div class="text-sm">
             <a href="/login" class="text-green-400 hover:text-green-500"> Ya tienes cuenta.? </a>
           </div>
@@ -95,6 +87,9 @@ const rememberme = !!email;
 
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
+
+    const originalText = btnSubmit.innerHTML;
+    btnSubmit.innerHTML = 'Registrando...';
     btnSubmit.setAttribute('disabled', 'disabled');
     errorMessage.classList.add('hidden');
     errorMessage.textContent = '';
@@ -107,10 +102,10 @@ const rememberme = !!email;
       const messages = error.fields ? Object.values(error.fields).flat().join('\n') : error.message;
       errorMessage.textContent = messages;
       errorMessage.classList.remove('hidden');
+      btnSubmit.innerHTML = originalText;
+      btnSubmit.removeAttribute('disabled');
     } else if (data) {
       // Éxito: redirigir o mostrar mensaje
-      // alert('Registro exitoso. Ahora podés hacer login.');
-      // Limpiar formulario
       form.reset();
 
       // Pequeña demora para que el usuario lea el mensaje
@@ -118,7 +113,5 @@ const rememberme = !!email;
         window.location.href = '/login';
       }, 1500);
     }
-
-    btnSubmit.removeAttribute('disabled');
   });
 </script>

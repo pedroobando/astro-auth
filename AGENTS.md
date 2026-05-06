@@ -35,6 +35,10 @@ src/
 │   └── auth-client.ts            # Cliente de better-auth para el browser
 ├── middleware/
 │   └── index.ts                  # Middleware de sesión con better-auth
+├── components/
+│   └── shared/
+│       ├── Navbar.astro              # Barra de navegación (usa StatusKey)
+│       └── StatusKey.astro           # Componente SSR: muestra Ingresar o Salir según sesión
 ├── pages/
 │   ├── api/auth/
 │   │   └── [...all].ts           # Endpoint catch-all de better-auth
@@ -64,7 +68,7 @@ src/
 | `src/utils/send-mail-user.ts` | ✅ Configurado | Envía emails de verificación con Resend            |
 | `src/env.d.ts`              | ✅ Actualizado  | Tipa `App.Locals` con `User`/`Session` de better-auth |
 | `.env`                      | ✅ Existe       | Variables para better-auth, Turso y Resend. NO commitear |
-| `src/layaouts/`             | ✅ Existen      | MainLayout, ContentLayout, AuthLayout               |
+| `src/layouts/`              | ✅ Existen      | MainLayout, ContentLayout, AuthLayout               |
 
 ---
 
@@ -104,6 +108,17 @@ src/
 | Implementar logout | ✅ Completado | Botón en `protected.astro` con `authClient.signOut()` y redirección a `/login`. |
 | Email de verificación | ✅ Configurado | Resend envía emails al registrarse (`sendOnSignUp: true`). |
 | Seed de datos de prueba | ✅ Completado | Seed usa tabla `posts` del schema del proyecto. |
+| Navbar consciente del estado de auth | ✅ Completado | Creado `StatusKey.astro` (SSR con script cliente). Muestra "Ingresar" o "Salir" según `Astro.locals.session`. |
+| Fix columna `posts.userId` | ✅ Completado | `text('id')` → `text('user_id')` en `schema.ts`. |
+| Redirigir login/registry si hay sesión | ✅ Completado | `Astro.redirect('/protected')` al inicio del frontmatter en login y registry. |
+| Renombrar `layaouts/` → `layouts/` | ✅ Completado | Directorio e imports actualizados en 4 páginas. |
+| Página 404 | ✅ Completado | Creado `src/pages/404.astro` con diseño centrado, gradiente green-400→emerald-500 y CTA a `/`. |
+| Limpiar import muerto en MainLayout | ✅ Completado | `import Navbar` eliminado. |
+| Fix conflicto CSS en ContentLayout | ✅ Completado | `m-auto mx-5` → `mx-auto`. |
+| Eliminar import redundante de global.css en AuthLayout | ✅ Completado | `import global.css` eliminado, MainLayout ya lo importa. |
+| Feedback visual en botones (spinners) | ✅ Completado | Login: "Ingresando...", Registry: "Registrando...", Logout: "Cerrando sesión..." guardando `originalHTML`. Restaura solo en error. |
+| Diferenciar tipos de error en registro | ✅ Completado | Creadas 4 helper functions (SRP): `extractErrorBody`, `getAuthErrorType`, `getErrorMessage`, `getErrorCode`. Detecta `duplicate_email`, `weak_password`, `validation`, `signup_disabled`. |
+| Usar `remember_me` en el registro | ✅ Completado | `remember_me` removido del registro (es un concern del login). Cookie-based remember_me implementado en login: setea/limpia cookie `email` después del signIn según checkbox. |
 
 > Si se completa un TODO, **actualizar esta tabla inmediatamente**.
 

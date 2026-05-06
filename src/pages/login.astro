@@ -1,6 +1,10 @@
 ---
-import AuthLayout from '@/layaouts/AuthLayout.astro';
-import MainLayout from '@/layaouts/MainLayout.astro';
+import AuthLayout from '@/layouts/AuthLayout.astro';
+import MainLayout from '@/layouts/MainLayout.astro';
+
+if (Astro.locals.session) {
+  return Astro.redirect('/protected');
+}
 
 const email = Astro.cookies.get('email')?.value ?? '';
 const rememberme = !!email;
@@ -85,6 +89,9 @@ const rememberme = !!email;
 
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
+
+    const originalText = btnSubmit.innerHTML;
+    btnSubmit.innerHTML = 'Ingresando...';
     btnSubmit.setAttribute('disabled', 'disabled');
     errorMessage.classList.add('hidden');
     errorMessage.textContent = '';
@@ -103,11 +110,19 @@ const rememberme = !!email;
     if (error) {
       errorMessage.textContent = error.message || 'Error al iniciar sesión';
       errorMessage.classList.remove('hidden');
+      btnSubmit.innerHTML = originalText;
+      btnSubmit.removeAttribute('disabled');
     } else {
+      // Set or clear the remember_me cookie
+      if (rememberMe) {
+        // 7 days in seconds
+        document.cookie = `email=${encodeURIComponent(email)}; max-age=${7 * 24 * 60 * 60}; path=/; SameSite=Lax`;
+      } else {
+        // Remove the cookie
+        document.cookie = 'email=; max-age=0; path=/; SameSite=Lax';
+      }
       // Éxito: redirigir a la página protegida o al home
       window.location.href = '/protected';
     }
-
-    btnSubmit.removeAttribute('disabled');
   });
 </script>

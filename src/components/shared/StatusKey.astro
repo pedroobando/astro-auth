@@ -1,0 +1,25 @@
+---
+const isLoggedIn = Astro.locals.user && Astro.locals.session;
+---
+
+<li class="font-semibold text-gray-700">
+  {isLoggedIn ? (
+    <a href="#" id="logout-link" class="cursor-pointer">Salir</a>
+  ) : (
+    <a href="/login">Ingresar</a>
+  )}
+</li>
+
+<script>
+  import { authClient } from '@/lib/auth-client';
+
+  const logoutLink = document.querySelector('#logout-link');
+
+  if (logoutLink) {
+    logoutLink.addEventListener('click', async (e) => {
+      e.preventDefault();
+      await authClient.signOut();
+      window.location.href = '/login';
+    });
+  }
+</script>
